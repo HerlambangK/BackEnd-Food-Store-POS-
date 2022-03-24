@@ -4,7 +4,18 @@ const mongoose = require("mongoose");
 // (2) kita import konfigurasi terkait MongoDB dari `app/config.js`
 const { dbHost, dbName, dbPort, dbUser, dbPass } = require("../app/config");
 
-console.log("hallow", dbHost, dbName, dbPort, dbUser, dbPass);
+console.log(
+  "hallow: ",
+  dbUser,
+  ":",
+  dbPass,
+  "@",
+  dbHost,
+  ":",
+  dbPort,
+  "/",
+  dbName
+);
 
 // (3) connect ke MongoDB menggunakan konfigurasi yang telah kita import
 //root_admin:123456@localhost:27017/foodstore

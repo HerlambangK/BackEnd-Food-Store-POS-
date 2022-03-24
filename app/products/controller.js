@@ -1,23 +1,85 @@
-// file app/product/controller.js
+// file `app/product/controller.js`
 
-// (1) import model `Product`
+const fs = require("fs");
+const path = require("path");
+
 const Product = require("./model");
-// buat function store
+const config = require("../config");
+
 async function store(req, res, next) {
-  // > tangkap data form yang dikirimkan oleh client sebagai variabel `payload`
+  try {
+    let payload = req.body;
 
-  let payload = req.body;
+    if (req.file) {
+      let tmp_path = req.file.path;
+      let originalExt =
+        req.file.originalname.split(".")[
+          req.file.originalname.split(".").length - 1
+        ];
+      let filename = req.file.filename + "." + originalExt;
+      let target_path = path.resolve(
+        config.rootPath,
+        `public/upload/${filename}`
+      );
 
-  // (1) buat Product baru menggunakan data dari `payload`
-  let product = new Product(payload);
+      const src = fs.createReadStream(tmp_path);
+      const dest = fs.createWriteStream(target_path);
+      src.pipe(dest);
 
-  // (2) simpan Product yang baru dibuat ke MongoDB
-  await product.save();
+      src.on("end", async () => {
+        try {
+          let product = new Product({ ...payload, image_url: filename });
+          await product.save();
+          return res.json(product);
+        } catch (err) {
+          // (1) jika error, hapus file yang sudah terupload pada direktori
+          fs.unlinkSync(target_path);
 
-  // (3) berikan response kepada client dengan mengembalikan product yang baru dibuat
-  return res.json(product);
+          // (2) cek apakah error disebabkan validasi MongoDB
+          if (err && err.name === "ValidationError") {
+            return res.json({
+              error: 1,
+              message: err.message,
+              fields: err.errors,
+            });
+          }
+
+          next(err);
+        }
+      });
+
+      src.on("error", async () => {
+        next(err);
+      });
+    } else {
+      let product = new Product(payload);
+      await product.save();
+      return res.json(product);
+    }
+  } catch (err) {
+    // ----- cek tipe error ---- //
+    if (err && err.name === "ValidationError") {
+      return res.json({
+        error: 1,
+        message: err.message,
+        fields: err.errors,
+      });
+    }
+
+    next(err);
+  }
+}
+
+async function index(req, res, next) {
+  try {
+    let products = await Product.find();
+    return res.json(products);
+  } catch (err) {
+    next(err);
+  }
 }
 
 module.exports = {
+  index,
   store,
 };
