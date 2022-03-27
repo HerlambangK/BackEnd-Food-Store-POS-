@@ -26,7 +26,7 @@ console.log(
 //   //   useFindAndModify: false,
 //   //   useCreateIndex: true,
 // });
-
+mongoose.Promise = global.Promise;
 mongoose.connect(`mongodb://${dbUser}:${dbPass}@${dbHost}:${dbPort}`, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
