@@ -4,9 +4,6 @@ var path = require("path");
 var cookieParser = require("cookie-parser");
 var logger = require("morgan");
 
-// var indexRouter = require("./routes/index");
-// var usersRouter = require("./routes/users");
-
 var app = express();
 
 // --> import file product router
@@ -21,6 +18,22 @@ const tagRouter = require("./app/tag/router");
 // --> import file auth router
 const authRouter = require("./app/auth/router");
 
+// --> import file decodeToken router
+const { decodeToken } = require("./app/auth/middleware");
+
+// --> import file wilayahRouter
+const wilayahRouter = require("./app/wilayah/router");
+
+const deliveryRouter = require("./app/delivery-address/router");
+
+const cartRouter = require("./app/cart/router");
+
+const orderRouter = require("./app/order/router");
+
+const invoiceRouter = require("./app/invoice/router");
+
+const cors = require("cors");
+
 // view engine setup
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "pug");
@@ -30,9 +43,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
+app.use(cors());
 
-// app.use("/", indexRouter);
-// app.use("/users", usersRouter);
+app.use(decodeToken());
 
 // (2) gunakan product router
 app.use("/api", productRouter);
@@ -45,6 +58,17 @@ app.use("/api", tagRouter);
 
 // (4) gunakan Auth router
 app.use("/auth", authRouter);
+
+// (4) gunakan wilayahRouter
+app.use("/api", wilayahRouter);
+
+app.use("/api", deliveryRouter);
+
+app.use("/api", cartRouter);
+
+app.use("/api", orderRouter);
+
+app.use("/api", invoiceRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
